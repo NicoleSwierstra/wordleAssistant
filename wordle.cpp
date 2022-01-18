@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <conio.h>
 #include <time.h>
+#include <windows.h>
 
 std::vector<std::string> common;
 std::vector<std::string> uncommon;
@@ -38,6 +39,17 @@ void checkLast(const std::string& last, const std::string& word){
 }
 
 int main(void){
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO scbi;
+    GetConsoleScreenBufferInfo(hOut, &scbi);
+    COORD newSize;
+    newSize.X = scbi.dwSize.X;
+    newSize.Y =  scbi.srWindow.Bottom - scbi.srWindow.Top + 1;
+    int Status = SetConsoleScreenBufferSize(hOut, newSize);
+    DWORD mode;
+    GetConsoleMode(hOut, &mode);
+    SetConsoleMode(hOut, mode | 0x0004);
+
     getStrings("common.txt", "uncommon.txt");
 
     srand(time(0));
