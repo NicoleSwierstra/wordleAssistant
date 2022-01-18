@@ -92,6 +92,7 @@ int main(void){
     newSize.X = scbi.dwSize.X;
     newSize.Y =  scbi.srWindow.Bottom - scbi.srWindow.Top + 1;
     int Status = SetConsoleScreenBufferSize(hOut, newSize);
+    SetConsoleMode(hOut, ENABLE_VIRTUAL_TERMINAL_PROCESSING);
     #else
     //idk linux
 
