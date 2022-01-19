@@ -121,6 +121,14 @@ int main(void){
                 if(input.length()-cursor) cursor++;
                 break;
             
+            case KEY_UP:
+                if(ycursor) ycursor--;
+                break;
+            
+            case KEY_DOWN:
+                ycursor++;
+                break;
+            
             case BACKSPACE:
                 if(!cursor) break;
                 input.erase(cursor-1);
@@ -134,6 +142,8 @@ int main(void){
                     input = input + c;
                 else input[cursor] = c;
                 cursor++;
+                ycursor = 0;
+                break;
         }
 
         render();
