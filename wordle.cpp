@@ -79,7 +79,7 @@ int main(void){
     getStrings("common.txt", "uncommon.txt");
 
     while(1){
-        std::cout << "press any key to continue\n";
+        std::cout << "press enter to continue\n";
         getchar();
 
         std::cout << "\033[2J\033[HWORDLE!\n";

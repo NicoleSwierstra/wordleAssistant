@@ -25,6 +25,7 @@ std::vector<std::string> uncommon;
 
 std::string input;
 bool illegal[26];
+bool inword[26];
 bool mode;
 int cursor = 0, ycursor = 0;
 
@@ -42,6 +43,10 @@ bool isValid(std::string s){
         else if(c != s[i]) return false;
         i++;
     }
+    for(i = 0; i < 26; i++){
+        if(!inword[i]) continue;
+        if(s.find('a' + i) == std::string::npos) return false;
+    }
     return true;
 }
 
@@ -49,6 +54,7 @@ void printBoardLine(std::string line){
     for(const char& c : line){
         if(c - 'a' >= 0 && c - 'a' < 26){
             if (illegal[c - 'a']) printf("\033[31m");
+            else if (inword[c - 'a']) printf("\033[33m");
             else printf("\033[37m");
             std::cout << c << " ";
         }
@@ -105,6 +111,7 @@ void render(){
         printf("\033[u");
     } 
     if(mode){
+        std::cout << "uppercase = yellow\nlowercase = red\n";
         printBoardLine("qwertyuiop");
         printBoardLine(" asdfghjkl");
         printBoardLine("  zxcvbnm");
@@ -132,7 +139,7 @@ int main(void){
     std::cout << "WELCOME TO WORDLE ASSISTANT!\n\n" <<
         "this program will help you in your escapades of wordle dominance by finding all 5 letter words that fit in a space\n" <<
         "to look up a word, type it in! for any missing letters use a \"-\"\n"
-        "use space to switch to letter removal mode, where you can enter grey letters";
+        "tab switches between search and remove mode with tab";
 
 
     getStrings("common.txt", "uncommon.txt");
@@ -158,15 +165,18 @@ int main(void){
                 break;
             
             case BACKSPACE:
-                if(!cursor) break;
-                input.erase(cursor-1);
-                cursor--;
+                if(!mode){
+                    if(!cursor) break;
+                    input.erase(cursor-1);
+                    cursor--;
+                }
+                else
+                    for(int i = 0; i < 26; i++) {illegal[i] = 0; inword[i] = 0;}
                 break;
             case ESCAPE:
                 return 0;
-            case ' ':
+            case '\t':
                 mode = !mode;
-                std::cout << mode << "\n";
                 break;
             default:
                 if(!mode){
@@ -179,7 +189,14 @@ int main(void){
                     ycursor = 0;
                 }
                 else {
-                    illegal[c - 'a'] = !illegal[c - 'a'];
+                    if(c >= 'A' && c < 'Z'){
+                        inword[c - 'A'] = !inword[c - 'A'];
+                        illegal[c - 'A'] = false;
+                    }
+                    else if (c >= 'a' && c < 'z'){
+                        illegal[c - 'a'] = !illegal[c - 'a'];
+                        inword[c - 'a'] = false;
+                    }
                 }
                 break;
         }
