@@ -111,7 +111,7 @@ void render(){
         printf("\033[u");
     } 
     if(mode){
-        std::cout << "uppercase = yellow\nlowercase = red\n";
+        std::cout << "uppercase = yellow\nlowercase = grey\n";
         printBoardLine("qwertyuiop");
         printBoardLine(" asdfghjkl");
         printBoardLine("  zxcvbnm");
