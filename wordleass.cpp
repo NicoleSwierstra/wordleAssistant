@@ -18,21 +18,43 @@
 #define KEY_RIGHT 77
 #define BACKSPACE 8
 #define ESCAPE 27
+#define SPACE ' '
 
 std::vector<std::string> common;
 std::vector<std::string> uncommon;
 
 std::string input;
+bool illegal[26];
+bool mode;
 int cursor = 0, ycursor = 0;
 
-void replaceAll(std::string& str, const std::string& from, const std::string& to) {
-    if(from.empty())
-        return;
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+bool isIllegal(std::string s){
+    for(char c : s){
+        if(illegal[c - 'a']) return true;
     }
+    return false;
+}
+
+bool isValid(std::string s){
+    int i = 0;
+    for(const char& c : input){
+        if(c == '-');
+        else if(c != s[i]) return false;
+        i++;
+    }
+    return true;
+}
+
+void printBoardLine(std::string line){
+    for(const char& c : line){
+        if(c - 'a' >= 0 && c - 'a' < 26){
+            if (illegal[c - 'a']) printf("\033[31m");
+            else printf("\033[37m");
+            std::cout << c << " ";
+        }
+        else std::cout << " ";
+    }
+    std::cout << "\n";
 }
 
 void getStrings(const std::string& filepathc, const std::string&  filepathu){
@@ -48,22 +70,21 @@ void getStrings(const std::string& filepathc, const std::string&  filepathu){
 
 void search(std::string token, int display){
     if(token.length() == 0) return;
-    std::regex regex = std::regex(token);
 
     int i = 0;
     
     printf("\033[38;5;76m");
     for(std::string s : common){
-        if(std::regex_match(s, regex)){
-            if(i > ycursor) std::cout << s << "\n";
+        if(isValid(s) && !isIllegal(s)){
+            if(i >= ycursor) std::cout << s << "\n";
             i++;
         }
         if(i > display + ycursor) return;
     }
     printf("\033[38;5;70m");
     for(std::string s : uncommon){
-        if(std::regex_match(s, regex)){
-            if(i > ycursor) std::cout << s << "\n";
+        if(isValid(s) && !isIllegal(s)){
+            if(i >= ycursor) std::cout << s << "\n";
             i++;
         }
         if(i > display + ycursor) return;
@@ -72,15 +93,22 @@ void search(std::string token, int display){
 
 void render(){
     printf("\033[2J\033[H\033[37m");
-    std::cout << input;
-    if(input.length() == 0) return;
-    printf("\033[s\n");
-    std::string token = input;
-    token.resize(5, '-');
 
-    replaceAll(token, "-", "\\w");
-    search(token, 25);
-    printf("\033[u");
+    if(!mode){
+        std::cout << input;
+        if(input.length() == 0) return;
+        printf("\033[s\n");
+        std::string token = input;
+        token.resize(5, '-');
+
+        search(token, 25);
+        printf("\033[u");
+    } 
+    if(mode){
+        printBoardLine("qwertyuiop");
+        printBoardLine(" asdfghjkl");
+        printBoardLine("  zxcvbnm");
+    }
 }
 
 int main(void){
@@ -92,27 +120,27 @@ int main(void){
     newSize.X = scbi.dwSize.X;
     newSize.Y =  scbi.srWindow.Bottom - scbi.srWindow.Top + 1;
     int Status = SetConsoleScreenBufferSize(hOut, newSize);
-    DWORD mode;
-    GetConsoleMode(hOut, &mode);
-    SetConsoleMode(hOut, mode | 0x0004);
+    DWORD cmode;
+    GetConsoleMode(hOut, &cmode);
+    SetConsoleMode(hOut, cmode | 0x0004);
     #else
     //idk linux
 
     #endif
 
+
     std::cout << "WELCOME TO WORDLE ASSISTANT!\n\n" <<
         "this program will help you in your escapades of wordle dominance by finding all 5 letter words that fit in a space\n" <<
-        "to look up a word, type it in! for any missing letters use a \"-\"";
+        "to look up a word, type it in! for any missing letters use a \"-\"\n"
+        "use space to switch to letter removal mode, where you can enter grey letters";
 
 
     getStrings("common.txt", "uncommon.txt");
 
-    std::cout << "\033[s"; //saves cursor pos
-
+    mode = true;
     while(1) {
         char c = getch();
         switch(c){
-
             case KEY_LEFT:
                 if(cursor) cursor--;
                 break;
@@ -135,14 +163,24 @@ int main(void){
                 cursor--;
                 break;
             case ESCAPE:
-                return 1;
+                return 0;
+            case ' ':
+                mode = !mode;
+                std::cout << mode << "\n";
+                break;
             default:
-                if(!(5-cursor)) break;
-                if(cursor==input.length())
-                    input = input + c;
-                else input[cursor] = c;
-                cursor++;
-                ycursor = 0;
+                if(!mode){
+                    if(!(5-cursor)) break;
+                    if(!isalpha(c) && c != '-') break;
+                    if(cursor==input.length())
+                        input = input + c;
+                    else input[cursor] = c;
+                    cursor++;
+                    ycursor = 0;
+                }
+                else {
+                    illegal[c - 'a'] = !illegal[c - 'a'];
+                }
                 break;
         }
 
